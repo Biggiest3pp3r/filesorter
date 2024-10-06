@@ -41,3 +41,43 @@ for file in file_name:
 
     if not moved:
         print(f"File {file} does not match any known category or has already been moved.")
+
+
+import hashlib
+
+
+def calculate_md5(file_path):
+    hash_md5 = hashlib.md5()
+    with open(file_path, "rb") as f:
+        for chunk in iter(lambda: f.read(4096), b""):
+            hash_md5.update(chunk)
+    return hash_md5.hexdigest()
+
+
+def is_duplicate(file_path, folder):
+    # Check all files in the folder for duplicates
+    for root, _, files in os.walk(folder):
+        for file in files:
+            existing_file_path = os.path.join(root, file)
+            if calculate_md5(file_path) == calculate_md5(existing_file_path):
+                return True
+    return False
+
+
+# Example usage in the loop
+for file in file_name:
+    file_path = os.path.join(path, file)
+    file_ext = os.path.splitext(file)[1].lower()
+
+    moved = False
+    for folder, extensions in folder_mapping.items():
+        if file_ext in extensions:
+            dest_folder = os.path.join(path, f"{folder} files")
+            if not is_duplicate(file_path, dest_folder):
+                shutil.move(file_path, os.path.join(dest_folder, file))
+                print(f"Moved: {file} to {folder} files")
+            else:
+                print(f"Duplicate found: {file} not moved.")
+            moved = True
+            break
+
